@@ -294,23 +294,31 @@ extension CountdownLabel {
     }
     
     func surplusTime(_ to1970Date: Date) -> String {
-        let calendar = Calendar.init(identifier: .gregorian)
-        var labelText = dateFormatter.string(from: to1970Date)
+        let calendar = Calendar(identifier: .gregorian)
+        var labelText = timeFormat
         let comp = calendar.dateComponents([.day, .hour, .minute, .second], from: date1970 as Date, to: to1970Date)
-        
-        // Calculate total hours including the days
+
+        var totalDays = comp.day ?? 0
         var totalHours = comp.hour ?? 0
-        if let days = comp.day {
-            totalHours += days * 24
+        var totalMinutes = comp.minute ?? 0
+        var totalSeconds = comp.second ?? 0
+
+        if !labelText.contains("dd") {
+            totalHours += totalDays * 24
+        } else if !labelText.contains("hh") {
+            totalMinutes += totalHours * 60
+        } else if !labelText.contains("mm") {
+            totalSeconds += totalMinutes * 60
         }
-        
+
         // Replace placeholders based on the provided timeFormat
         if let hour = comp.hour, let minute = comp.minute, let second = comp.second {
+            labelText = labelText.replacingOccurrences(of: "dd", with: String(format: "%02ld", totalDays))
             labelText = labelText.replacingOccurrences(of: "hh", with: String(format: "%02ld", totalHours))
-            labelText = labelText.replacingOccurrences(of: "mm", with: String(format: "%02ld", minute))
-            labelText = labelText.replacingOccurrences(of: "ss", with: String(format: "%02ld", second))
+            labelText = labelText.replacingOccurrences(of: "mm", with: String(format: "%02ld", totalMinutes))
+            labelText = labelText.replacingOccurrences(of: "ss", with: String(format: "%02ld", totalSeconds))
         }
-        
+
         return labelText
     }
     
